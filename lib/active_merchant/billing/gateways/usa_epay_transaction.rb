@@ -146,7 +146,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(post, credit_card)
-        if credit_card.respond_to?(:track_data) && credit_card.track_data.present?
+        if credit_card.track_data
           post[:magstripe] = credit_card.track_data
           post[:cardpresent] = true
         else
