@@ -33,49 +33,50 @@ module ActiveMerchant #:nodoc:
       AUTHORIZE_NET_CIM_NAMESPACE = 'AnetApi/xml/v1/schema/AnetApiSchema.xsd'
 
       CIM_ACTIONS = {
-        :create_customer_profile => 'createCustomerProfile',
-        :create_customer_payment_profile => 'createCustomerPaymentProfile',
-        :create_customer_shipping_address => 'createCustomerShippingAddress',
-        :get_customer_profile => 'getCustomerProfile',
-        :get_customer_profile_ids => 'getCustomerProfileIds',
-        :get_customer_payment_profile => 'getCustomerPaymentProfile',
-        :get_customer_shipping_address => 'getCustomerShippingAddress',
-        :delete_customer_profile => 'deleteCustomerProfile',
-        :delete_customer_payment_profile => 'deleteCustomerPaymentProfile',
-        :delete_customer_shipping_address => 'deleteCustomerShippingAddress',
-        :update_customer_profile => 'updateCustomerProfile',
-        :update_customer_payment_profile => 'updateCustomerPaymentProfile',
-        :update_customer_shipping_address => 'updateCustomerShippingAddress',
-        :create_customer_profile_transaction => 'createCustomerProfileTransaction',
-        :validate_customer_payment_profile => 'validateCustomerPaymentProfile'
+          :create_customer_profile => 'createCustomerProfile',
+          :create_customer_payment_profile => 'createCustomerPaymentProfile',
+          :create_customer_shipping_address => 'createCustomerShippingAddress',
+          :get_customer_profile => 'getCustomerProfile',
+          :get_customer_profile_ids => 'getCustomerProfileIds',
+          :get_customer_payment_profile => 'getCustomerPaymentProfile',
+          :get_customer_shipping_address => 'getCustomerShippingAddress',
+          :delete_customer_profile => 'deleteCustomerProfile',
+          :delete_customer_payment_profile => 'deleteCustomerPaymentProfile',
+          :delete_customer_shipping_address => 'deleteCustomerShippingAddress',
+          :update_customer_profile => 'updateCustomerProfile',
+          :update_customer_payment_profile => 'updateCustomerPaymentProfile',
+          :update_customer_shipping_address => 'updateCustomerShippingAddress',
+          :create_customer_profile_transaction => 'createCustomerProfileTransaction',
+          :validate_customer_payment_profile => 'validateCustomerPaymentProfile',
+          :get_hosted_profile_page => 'getHostedProfilePage'
       }
 
       CIM_TRANSACTION_TYPES = {
-        :auth_capture => 'profileTransAuthCapture',
-        :auth_only => 'profileTransAuthOnly',
-        :capture_only => 'profileTransCaptureOnly',
-        :prior_auth_capture => 'profileTransPriorAuthCapture',
-        :refund => 'profileTransRefund',
-        :void => 'profileTransVoid'
+          :auth_capture => 'profileTransAuthCapture',
+          :auth_only => 'profileTransAuthOnly',
+          :capture_only => 'profileTransCaptureOnly',
+          :prior_auth_capture => 'profileTransPriorAuthCapture',
+          :refund => 'profileTransRefund',
+          :void => 'profileTransVoid'
       }
 
       CIM_VALIDATION_MODES = {
-        :none => 'none',
-        :test => 'testMode',
-        :live => 'liveMode',
-        :old => 'oldLiveMode'
+          :none => 'none',
+          :test => 'testMode',
+          :live => 'liveMode',
+          :old => 'oldLiveMode'
       }
 
       BANK_ACCOUNT_TYPES = {
-        :checking => 'checking',
-        :savings => 'savings',
-        :business_checking => 'businessChecking'
+          :checking => 'checking',
+          :savings => 'savings',
+          :business_checking => 'businessChecking'
       }
 
       ECHECK_TYPES = {
-        :ccd => 'CCD',
-        :ppd => 'PPD',
-        :web => 'WEB'
+          :ccd => 'CCD',
+          :ppd => 'PPD',
+          :web => 'WEB'
       }
 
       self.homepage_url = 'http://www.authorize.net/'
@@ -383,11 +384,11 @@ module ActiveMerchant #:nodoc:
             requires!(options[:transaction], :trans_id)
           when :refund
             requires!(options[:transaction], :trans_id) &&
-              (
+                (
                 (options[:transaction][:customer_profile_id] && options[:transaction][:customer_payment_profile_id]) ||
-                options[:transaction][:credit_card_number_masked] ||
-                (options[:transaction][:bank_routing_number_masked] && options[:transaction][:bank_account_number_masked])
-              )
+                    options[:transaction][:credit_card_number_masked] ||
+                    (options[:transaction][:bank_routing_number_masked] && options[:transaction][:bank_account_number_masked])
+                )
           when :prior_auth_capture
             requires!(options[:transaction], :amount, :trans_id)
           else
@@ -472,6 +473,14 @@ module ActiveMerchant #:nodoc:
 
         request = build_request(:validate_customer_payment_profile, options)
         commit(:validate_customer_payment_profile, request)
+      end
+
+
+      def get_hosted_profile_page(options)
+        requires!(options, :customer_profile_id)
+
+        request = build_request(:get_hosted_profile_page, options)
+        commit(:get_hosted_profile_page, request)
       end
 
       private
@@ -632,6 +641,23 @@ module ActiveMerchant #:nodoc:
 
         xml.target!
       end
+
+      def build_get_hosted_profile_page_request(xml,options)
+        xml.tag!('customerProfileId', options[:customer_profile_id])
+        if options.has_key?(:settings)
+          xml.tag!('hostedProfileSettings') do
+            options[:settings].each do |key, value|
+              xml.tag!('setting') do
+                xml.tag!('settingName', key.to_s)
+                xml.tag!('settingValue', value)
+              end
+            end
+          end
+        end
+        #puts(xml.target!)
+        xml.target!
+      end
+
 
       # :merchant_customer_id (Optional)
       # :description (Optional)
@@ -864,8 +890,8 @@ module ActiveMerchant #:nodoc:
         transaction_id = response_params['direct_response']['transaction_id'] if response_params['direct_response']
 
         Response.new(success, message, response_params,
-          :test => test_mode,
-          :authorization => transaction_id || response_params['customer_profile_id'] || (response_params['profile'] ? response_params['profile']['customer_profile_id'] : nil)
+                     :test => test_mode,
+                     :authorization => transaction_id || response_params['customer_profile_id'] || (response_params['profile'] ? response_params['profile']['customer_profile_id'] : nil)
         )
       end
 
@@ -882,62 +908,62 @@ module ActiveMerchant #:nodoc:
         direct_response = {'raw' => params}
         direct_response_fields = params.split(delimiter)
         direct_response.merge(
-          {
-            'response_code' => direct_response_fields[0],
-            'response_subcode' => direct_response_fields[1],
-            'response_reason_code' => direct_response_fields[2],
-            'message' => direct_response_fields[3],
-            'approval_code' => direct_response_fields[4],
-            'avs_response' => direct_response_fields[5],
-            'transaction_id' => direct_response_fields[6],
-            'invoice_number' => direct_response_fields[7],
-            'order_description' => direct_response_fields[8],
-            'amount' => direct_response_fields[9],
-            'method' => direct_response_fields[10],
-            'transaction_type' => direct_response_fields[11],
-            'customer_id' => direct_response_fields[12],
-            'first_name' => direct_response_fields[13],
-            'last_name' => direct_response_fields[14],
-            'company' => direct_response_fields[15],
-            'address' => direct_response_fields[16],
-            'city' => direct_response_fields[17],
-            'state' => direct_response_fields[18],
-            'zip_code' => direct_response_fields[19],
-            'country' => direct_response_fields[20],
-            'phone' => direct_response_fields[21],
-            'fax' => direct_response_fields[22],
-            'email_address' => direct_response_fields[23],
-            'ship_to_first_name' => direct_response_fields[24],
-            'ship_to_last_name' => direct_response_fields[25],
-            'ship_to_company' => direct_response_fields[26],
-            'ship_to_address' => direct_response_fields[27],
-            'ship_to_city' => direct_response_fields[28],
-            'ship_to_state' => direct_response_fields[29],
-            'ship_to_zip_code' => direct_response_fields[30],
-            'ship_to_country' => direct_response_fields[31],
-            'tax' => direct_response_fields[32],
-            'duty' => direct_response_fields[33],
-            'freight' => direct_response_fields[34],
-            'tax_exempt' => direct_response_fields[35],
-            'purchase_order_number' => direct_response_fields[36],
-            'md5_hash' => direct_response_fields[37],
-            'card_code' => direct_response_fields[38],
-            'cardholder_authentication_verification_response' => direct_response_fields[39],
-            # The following direct response fields are only available in version 3.1 of the
-            # transaction response.  Check your merchant account settings for details.
-            'account_number' => direct_response_fields[50] || '',
-            'card_type' => direct_response_fields[51] || '',
-            'split_tender_id' => direct_response_fields[52] || '',
-            'requested_amount' => direct_response_fields[53] || '',
-            'balance_on_card' => direct_response_fields[54] || '',
-          }
+            {
+                'response_code' => direct_response_fields[0],
+                'response_subcode' => direct_response_fields[1],
+                'response_reason_code' => direct_response_fields[2],
+                'message' => direct_response_fields[3],
+                'approval_code' => direct_response_fields[4],
+                'avs_response' => direct_response_fields[5],
+                'transaction_id' => direct_response_fields[6],
+                'invoice_number' => direct_response_fields[7],
+                'order_description' => direct_response_fields[8],
+                'amount' => direct_response_fields[9],
+                'method' => direct_response_fields[10],
+                'transaction_type' => direct_response_fields[11],
+                'customer_id' => direct_response_fields[12],
+                'first_name' => direct_response_fields[13],
+                'last_name' => direct_response_fields[14],
+                'company' => direct_response_fields[15],
+                'address' => direct_response_fields[16],
+                'city' => direct_response_fields[17],
+                'state' => direct_response_fields[18],
+                'zip_code' => direct_response_fields[19],
+                'country' => direct_response_fields[20],
+                'phone' => direct_response_fields[21],
+                'fax' => direct_response_fields[22],
+                'email_address' => direct_response_fields[23],
+                'ship_to_first_name' => direct_response_fields[24],
+                'ship_to_last_name' => direct_response_fields[25],
+                'ship_to_company' => direct_response_fields[26],
+                'ship_to_address' => direct_response_fields[27],
+                'ship_to_city' => direct_response_fields[28],
+                'ship_to_state' => direct_response_fields[29],
+                'ship_to_zip_code' => direct_response_fields[30],
+                'ship_to_country' => direct_response_fields[31],
+                'tax' => direct_response_fields[32],
+                'duty' => direct_response_fields[33],
+                'freight' => direct_response_fields[34],
+                'tax_exempt' => direct_response_fields[35],
+                'purchase_order_number' => direct_response_fields[36],
+                'md5_hash' => direct_response_fields[37],
+                'card_code' => direct_response_fields[38],
+                'cardholder_authentication_verification_response' => direct_response_fields[39],
+                # The following direct response fields are only available in version 3.1 of the
+                # transaction response.  Check your merchant account settings for details.
+                'account_number' => direct_response_fields[50] || '',
+                'card_type' => direct_response_fields[51] || '',
+                'split_tender_id' => direct_response_fields[52] || '',
+                'requested_amount' => direct_response_fields[53] || '',
+                'balance_on_card' => direct_response_fields[54] || '',
+            }
         )
       end
 
       def parse(action, xml)
         xml = REXML::Document.new(xml)
         root = REXML::XPath.first(xml, "//#{CIM_ACTIONS[action]}Response") ||
-               REXML::XPath.first(xml, "//ErrorResponse")
+            REXML::XPath.first(xml, "//ErrorResponse")
         if root
           response = parse_element(root)
         end
