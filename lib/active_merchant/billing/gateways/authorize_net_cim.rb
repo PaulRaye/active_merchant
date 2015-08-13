@@ -395,6 +395,7 @@ module ActiveMerchant #:nodoc:
             requires!(options[:transaction], :amount, :customer_profile_id, :customer_payment_profile_id)
         end
         request = build_request(:create_customer_profile_transaction, options)
+        # puts(request)
         commit(:create_customer_profile_transaction, request)
       end
 
@@ -628,7 +629,6 @@ module ActiveMerchant #:nodoc:
         xml.tag!('extraOptions') do
           xml.cdata!(format_extra_options(options[:extra_options]))
         end unless options[:extra_options].blank?
-
         xml.target!
       end
 
@@ -715,10 +715,15 @@ module ActiveMerchant #:nodoc:
                 xml.tag!('transId', transaction[:trans_id])
               else
                 xml.tag!('amount', transaction[:amount])
+                add_tax(xml, transaction[:tax]) if transaction[:tax]
+                add_shipping(xml, transaction[:shipping]) if transaction[:shipping]
+                add_duty(xml, transaction[:duty]) if transaction[:duty]
+                add_line_items(xml, transaction[:line_items]) if transaction[:line_items]
                 xml.tag!('customerProfileId', transaction[:customer_profile_id])
                 xml.tag!('customerPaymentProfileId', transaction[:customer_payment_profile_id])
-                xml.tag!('approvalCode', transaction[:approval_code]) if transaction[:type] == :capture_only
+                xml.tag!('customerShippingAddressId', transaction[:customer_shipping_address_id])
                 add_order(xml, transaction[:order]) if transaction[:order].present?
+                xml.tag!('approvalCode', transaction[:approval_code]) if transaction[:type] == :capture_only
 
             end
             if [:auth_capture, :auth_only, :capture_only].include?(transaction[:type])
@@ -752,6 +757,20 @@ module ActiveMerchant #:nodoc:
           xml.tag!('amount', shipping[:amount]) if shipping[:amount]
           xml.tag!('name', shipping[:name]) if shipping[:name]
           xml.tag!('description', shipping[:description]) if shipping[:description]
+        end
+      end
+
+      def add_line_items(xml, line_items)
+
+        line_items.each do |line_item|
+          xml.tag!('lineItems') do
+            xml.tag!('itemId', line_item[:item_id]) if line_item[:item_id]
+            xml.tag!('name', line_item[:name]) if line_item[:name]
+            xml.tag!('description', line_item[:description]) if line_item[:description]
+            xml.tag!('quantity', line_item[:quantity]) if line_item[:quantity]
+            xml.tag!('unitPrice', line_item[:unit_price]) if line_item[:unit_price]
+            xml.tag!('taxable', line_item[:taxable]) if line_item[:taxable]
+          end
         end
       end
 
